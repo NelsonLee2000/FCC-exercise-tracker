@@ -81,11 +81,11 @@ app.post('/api/users/:_id/exercises', async (req, res) => {
       formattedDate = newDateObject.toDateString();
 
         res.json({
-          _id: user_id,
+          _id: user_id.toString(),
           username: username,
           date: formattedDate,
           duration: newDuration,
-          description: newDescription
+          description: newDescription,
         });
       
     } else {
@@ -104,7 +104,12 @@ app.get('/api/users', async (req, res) => {
       "SELECT user_id, username FROM users"
     );
 
-    res.json(allUsers.rows);
+    const formattedUsers = allUsers.rows.map(users => ({
+      _id: users.user_id.toString(),
+      username: users.username,
+    }))
+
+    res.json(formattedUsers);
   } catch (err) {
     console.error(err.message);
   }
@@ -125,13 +130,11 @@ app.get('/api/users/:_id/logs', async (req, res) => {
         'SELECT description, duration, date FROM exercises WHERE user_id = $1 AND date BETWEEN $2 and $3 LIMIT $4',
         [userId, from, to, limit]
       );
-      console.log("using from to and limit")
     } else {
       logExercises = await pool.query(
         'SELECT description, duration, date FROM exercises WHERE user_id = $1',
         [userId]
       );
-      console.log("not using from to and limit")
     }
 
   const logExercisesFormattedDate = logExercises.rows.map(exercise => ({
